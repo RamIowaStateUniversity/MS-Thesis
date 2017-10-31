@@ -2,7 +2,7 @@
 \label{sec:approach}
 \label{sec:overview}
  
-In this section we first provide a brief overview of our technique, 
+In this chapter we first provide a brief overview of our technique, 
 followed by an overview of the constructs used for expressing source code analyses.
 We then describe properties, analyses, and a decision tree that are 
 the technical underpinnings of our selection technique.
@@ -64,7 +64,7 @@ is determined for every input graph.
 \label{sec:compute-properties}
 While it is known in the literature that choosing a right traversal strategy for
 the source code analysis can significantly improve the
-performance~\cite{atkinson2001implementation}, how to choose a right traversal
+performance. For example, ~\cite{atkinson2001implementation} have developed a hybridized iterative-worklist algorithm that processes fewer blocks than the traditional algorithm. Despite these advances, how to choose a right traversal
 strategy, what factors influence the selection of the right traversal strategy,
 what properties of the analysis and graph are important, and how to determine
 them, were not known.
@@ -93,7 +93,7 @@ nodes. For instance, in the reaching definition data-flow analysis, the outputs
 of nodes are computed using the outputs of predecessors and in live variable
 data-flow analysis, the outputs of nodes are computed using the outputs of
 successors. Hence, both reaching definition and live variable analysis are
-data-flow sensitive.
+data-flow sensitive. The term data-flow sensitive is different from the traditional term flow-sensitive, that is used in the literature (~\cite{choi1993efficient}). In literature, a problem is "flow-sensitive" if information about control internal to subroutines is used to compute the final set of data flow facts, while our definition of data-flow sensitive is given below.
 
 % Data flow sensitivity is a property defined for every traversal in the analysis.
 % A traversal is said to be data flow sensitive, if the traversal output of a node
@@ -116,14 +116,8 @@ is data-flow sensitive. That is $P_{DataFlow}$ is \textit{true} otherwise
 % O[n] = F(O[n'])
 % \end{equation}
 
-For instance, consider the lines 16 and 17 of the \lstinline|domT| traversal
-shown in Listing \ref{lst:dominators}. Here, a variable \lstinline|dom| holds
-the traversal output of a node $n$ and it is computed by applying an
-\lstinline|intersection| operation on the traversal outputs of successors of
-$n$. Here, the function $F$ is \lstinline|intersection| over the outputs of all
-successors of a node.
-
 \input{tex-figures/algorithms/flow_sensitivity}
+
 \subsection{Computing Data-Flow Sensitivity}
 \label{sec:df-algo}
 To determine the data-flow sensitivity property of a traversal, the operations
@@ -143,7 +137,7 @@ node \lstinline|n| is computed using the traversal outputs of other nodes
 (\lstinline|n'|) and hence the traversal is data-flow sensitive.
 For performing the points to check, \algoref{algo:flow-sensitive} assumes that
 an alias environment is computed by using must alias
-analysis~\cite{must-alias}. \algoref{algo:flow-sensitive} requires that
+analysis(~\cite{must-alias}). \algoref{algo:flow-sensitive} requires that
 the must alias analysis computes all names in the \lstinline|tbody| that must
 alias each other at any program point. The must alias information ensures that
 \algoref{algo:flow-sensitive} never classifies a data-flow sensitive traversal
@@ -155,13 +149,23 @@ classify the traversal as data-flow sensitive. The control and loop statements
 in the \lstinline|tbody| do not have any impact on \algoref{algo:flow-sensitive}
 for computing the data-flow sensitivity property.
 
+\paragraph{Worked Out Example .}
+For instance, consider the \lstinline|domT| traversal shown in Listing \ref{lst:dominators}. Lets apply Algorithm \ref{algo:flow-sensitive} to determine if \lstinline|domT| traversal is data-flow sensitive or not. Here \lstinline|domT| is the \lstinline|t|. We first compute the aliases of n in \lstinline|domT| traversal. Only n is an alias of n (every variable is an alias of itself) in \lstinline|domT| traversal. Then for each statement in \lstinline|domT| traversal, we apply line 3-5 in Algorithm \ref{algo:flow-sensitive}. Consider the line 17 of the \lstinline|domT| traversal. Here, there is a statement \lstinline|output (s, domT )| which if of the form \lstinline|output (n', t' )|. Here \lstinline|domT| which is t', is equal to t and \lstinline|s| which is \lstinline|n'| is not an alias of \lstinline|n|. Hence we return true, indicating \lstinline|domT| is data-flow sensitive.
+
+Intuitively, in line 16 and 17, a variable \lstinline|dom| holds
+the traversal output of a node $n$ and it is computed by applying an
+\lstinline|intersection| operation on the traversal outputs of successors of
+$n$. Here, the function $F$ is \lstinline|intersection| over the outputs of all
+successors of a node and jence it is dependent on output of other nodes..
+
 \subsection{Loop Sensitivity}
 The loop sensitivity property models the effect of the loops in the input graph.
 If an input graph contains loops and if the traversal is affected by the loop,
 the traversal may require multiple iterations to compute the output of nodes.
 In the multiple iterations, the traversal outputs of nodes either shrinks or
 expands to reach a fixpoint. Hence, we define a traversal as loop sensitive,
-if the traversal output of nodes in subsequent iterations shrinks or expands.
+if the traversal output of nodes in subsequent iterations shrinks or expands. The term loop-sensitive is different from the iteration dependences, that is used in the literature (~\cite{blume1996parallel}). In literature, Iteration dependences arise when two different iterations access the same memory location and one or both
+accesses are a memory write, while our definition of loop-sensitive is given below.
 
 \begin{definition}\label{def:loop-sensitivity}
 $P_{Loop}$ (\textbf{Loop sensitivity}). Given a traversal \lstinline|t|, a map
@@ -325,7 +329,8 @@ node always expands, and if there exists \lstinline|intersection| and
 \lstinline|remove| operations, the output of a node always shrinks. For a
 data-flow traversal to be loop sensitive, the output of nodes must either expand
 or shrink, not both (lines 28-29). 
-
+\paragraph{Worked Out Example.} Consider the \lstinline|domT| traversal shown in Listing
+\ref{lst:dominators}. Lets apply Algorithm \ref{algo:loop-sensitive} to determine if \lstinline|domT| traversal is loop-sensitive or not. Here \lstinline|domT| is the \lstinline|t|. We first compute the aliases of n. Only n is an alias of n (every variable is an alias of itself) in \lstinline|domT| traversal. Then for each statement in \lstinline|domT| traversal, we apply line 9-14 in Algorithm \ref{algo:loop-sensitive} to compute \lstinline|V| and \lstinline|V'|. There is only one statement of form \lstinline|v = output(n', t')| in \ref{lst:dominators} (line 8). Here dom maps to v, domT maps to t' and n maps to n. Since \lstinline|domT| is also \lstinline|t|, line 12 in Algorithm \ref{algo:loop-sensitive} gets executed. At the end of line 14, \lstinline|V| contains \lstinline|dom| and \lstinline|V'| is empty. We once again analyze every statement in \lstinline|domT| traversal to search for union, intersection, add, addAll, remove, removeAll statement (line 15-27). We have intersection (line 17) and add (line 18) statement in \lstinline|domT| traversal, which sets variable \lstinline|shrink| and \lstinline|gen| to true. Line 28 in Algorithm \ref{algo:loop-sensitive} checks if either both \lstinline|expand| and \lstinline|kill| are true or \lstinline|shrink| and \lstinline|kill| are true. Since both these conditions are not met, the algorithm return \lstinline|domT| as loop-insensitive.
 \subsection{Graph \Graphprop}
 So far we have described the two static properties of the analysis that
 influences the traversal strategy selection. A property of the input graph
@@ -376,7 +381,7 @@ prior to computing the node's output.
 \label{sec:candidates}
 
 We have picked seven traversal strategies as candidates for choosing an optimal
-traversal strategy for given a traversal and an input graph. The selected candidate strategies were arrived at by carefully reviewing compilers textbooks, implementations, and source code analysis frameworks. We also made sure that the selected candidate strategies are applicable to any graphs and analysis. We did not consider strategies like chaotic iteration based on Weak Topological Ordering because they are effective only for computing fixed points of continuous function over lattices of infinite height ~\cite{bourdoncle93}.
+traversal strategy for given a traversal and an input graph. The selected candidate strategies were arrived at by carefully reviewing compilers textbooks, implementations, and source code analysis frameworks. We also made sure that the selected candidate strategies are applicable to any graphs and analysis. We did not consider strategies like chaotic iteration based on Weak Topological Ordering because they are effective only for computing fixed points of continuous function over lattices of infinite height (~\cite{bourdoncle93}).
 The selected traversal strategies are describe below:
 \begin{itemize}
   \item \textbf{Any order (\textit{ANY})}: In this traversal strategy, nodes can
@@ -411,7 +416,7 @@ The selected traversal strategies are describe below:
 
 \begin{figure}[ht!]
 \centering
-\includegraphics[width=0.8\linewidth]{figures/decision.pdf}
+\includegraphics[width=1\linewidth]{figures/decision.pdf}
 \caption{Traversal strategy selection decision tree.}
 \label{fig:decision-diagram}
 \end{figure}
@@ -553,7 +558,7 @@ traversal.
 As \lstinline|initT| is data-flow insensitive, \textit{ANY} traversal strategy
 is picked as shown by the path $P_{11}$ in \fignref{fig:decision-diagram} and no
 further checks are required. The traversal strategy \textit{ANY} represents
-nodes visited in any order.
+nodes visited in any order. Figure \ref{fig:dt-example} shows the path taken for \lstinline|initT| traversal.
 
 For selecting the best traversal strategies for \lstinline|domT| and the graph
 with branch and loop, we check the data-flow sensitivity property of the
@@ -569,42 +574,72 @@ we pick \textit{PO} traversal strategy for \lstinline|domT| traversal, as shown
 by the path $P_6$ in \fignref{fig:decision-diagram}. The traversal strategy
 post-order (\textit{PO}) visits all successors of a node before visiting that
 node. This is most suitable for backward analysis like \lstinline|domT|, because
-backward analysis analyzes successors of a node prior to analyzing the node.
+backward analysis analyzes successors of a node prior to analyzing the node. Figure \ref{fig:dt-example} shows the path taken for \lstinline|domT| traversal.
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[width=1\linewidth]{tex-figures/initTdomT.pdf}
+	\label{fig:dt-example}
+\end{figure}
 
 \section{Optimizing the Selected Traversal Strategy}
 \label{subsec:optimizations}
-The properties of the analysis and the input graph not only helps us select the
-best traversal strategy, it also helps to perform several optimizations to the
-selected traversal strategies. 
+Checking the static and dynamic properties not only determines the best traversal strategies,
+it also helps to perform several optimizations to the selected traversal strategies.
+In the traversal-based program analysis with a fixpoint function, in addition to the analysis
+traversal, two additional traversals of all nodes is required: one traversal to re-compute the
+analysis results at graph nodes, and another traversal to perform the fixpoint check to ensure
+that results at nodes have stabilized. The fixpoint check traversal compares the outputs
+of two traversals of each nodes. The two additional traversals can be eliminated and we
+formulate them as two optimizations, as described below:
+\begin{itemize}
+	\item [[Opt1]] Eliminating the result re-computation traversal: A traversal that re-computes the
+results at graph nodes for enabling a fixpoint traversal to compare the two results (the
+analysis traversal result and the re-computation result) can be eliminated, if it is known
+that results have stabilized and not going to change.
 
-Running an analysis on a cyclic graph may require multiple iterations of the
-nodes to compute the fixpoint solution. At least one additional traversal of the
-nodes is required before the fixpoint check that compares the result of the last
-two traversals to to ensure that results at nodes have stabilized. This
-additional traversal and the fixpoint checks at nodes can be eliminated based on
-the selected traversal strategy.
+\item [[Opt2]] Eliminating the fixpoint check traversal: A fixpoint check traversal that checks the
+results of the two traversals at graph nodes can be eliminated, if it is known that results
+are stabilized and not going to change.
+\end{itemize}
 
-For data-flow insensitive traversals, we know that the traversal outputs of
-nodes does not depend on the outputs of other nodes, hence both the additional
-traversal and the fixpoint checks can be eliminated irrespective of the graph
-cyclicity (path $P_{11}$ in our decision diagram
-\fignref{fig:decision-diagram}).
-In case of data-flow sensitive traversals, the traversal output of a node is
-computed using the traversal outputs of other nodes (predecessors or
-successors). For data-flow sensitive analysis on a acyclic graph provides an
-opportunity to eliminate the additional traversal and fixpoint checks iff the
-selected traversal strategy guarantees that the nodes whose outputs are required
-to compute the output of a node are visited prior to visiting the node (paths
-$P_1$ to $P_4$). 
-In case of data-flow traversals, but loop insensitive traversals, and acyclic
-graphs, the additional traversal and fixpoint checks can be eliminated iff the
-selected traversal strategy guarantees that the nodes whose outputs are required
-to compute the output of a node are visited prior to visiting the node (paths
-$P_5$ to $P_8$).
-The optimizations does not apply for traversals that are both data-flow and loop
-sensitive, and the graph has cycles (paths $P_9$ and $P_{10}$). For such
-traversals, our technique selects the worklist-based traversal strategy which
-must perform fixpoint checks every time a node is visited.
+The same static and dynamic checks that are performed to determine a traversal strategies
+also helps to determine if the optimizations can be performed. For instance, consider path
+$P_1$ in our decision tree shown in \fignref{fig:decision-diagram}. This path selects INC traversal strategy that
+visits nodes in the increasing order of the node ids. While selecting this strategy, we came to know that the analysis is data-flow sensitive (which means the analysis output of neighbors
+(predecessors or successors) is required for computing the output of a node), the graph is
+sequential, (which means there is only one successor or predecessor), and the analysis is a
+forward analysis (which means the output of the predecessor is required to compute the
+output of a node). Together, we know that if a traversal strategy ensures that the predecessor
+is visited before visiting any node, the analysis output can be computed in one traversal and
+no fixpoint check is necessary. The traversal strategy selected for this path is INC and it
+ensures this property. Hence, both Opt1 and Opt2 can be applied to the selected traversal
+strategy to further improve the performance. As we show in our evaluation (\ref{sec:analysis-traversal-opt}), upto 60%
+of the analysis time can be saved by performing these optimizations.
+In our decision tree shown in \fignref{fig:decision-diagram}, all paths from $P_1$ to $P_8$ are eligible for both the
+optimizations. The paths $P_9$ and $P_10$ uses a worklist-based traversal strategy that visits only
+relevant nodes (relevant nodes are the nodes whose outputs have changed from the last visit)
+and must perform a fixpoint check every time a node is visited, hence the optimizations
+cannot be performed. Finally, for path $P_11$, the optimizations are not applicable, because
+data-flow insensitive traversals requires only one traversal to compute the results and no
+fixpoint check is performed.
+
+Figure \ref{fig:opt-example} shows the iterations made over the graph (both \lstinline|domT| and fixpoint) to get the post dominator of each node without optimization. "Before domT traversal" shows the initial post dominator set of each node ie the initial output of each node before analysis started. "1st iteration of domT traversal" shows the post dominator set of each node after iterating the graph once and applying the \lstinline|domT| analysis. "2nd iteration of domT traversal" shows the post dominator set of each node after iterating the graph once more and applying the \lstinline|domT| analysis. The number of iterations that has to be made is decided by the fixpoint function. Fixpoint basically compares each node's current \lstinline|pdom| with previous iterations \lstinline|pdom|. In the "1st Fixpoint traversal", fixpoint function compared \lstinline|pdom| of "Before domT traversal" and "1st iteration of domT traversal". All nodes returned \lstinline|False| as no \lstinline|pdom| matched. Hence domT required one more traversal. In the "2nd Fixpoint traversal", fixpoint function compared \lstinline|pdom| of "1st iteration of domT traversal" and "wnd iteration of domT traversal". Here all nodes returned \lstinline|True| as all \lstinline|pdom| matched. Therefore no more iteration of \lstinline|domT| was needed. One point to note is that, post dominator was actually correctly computed in the "1st iteration of domT traversal". But since the fixpoint function returned \lstinline|False|, we performed one more iteration of \lstinline|domT| traversal which returned the same post dominator set and fixpoint reached.\newline
+Since hybrid knows that the due to the selection of traversal strategy, post dominator will be reached in the "1st iteration of domT traversal", it does not perform the "2nd iteration of domT traversal" even though fixpoint returns \lstinline|False|. This is [Opt1].\newline
+Since hybrid knows that post dominator will be reached in the "1st iteration of domT traversal", it does not need to perform fixpoint check to ensure that. This is [Opt2].
+Figure \ref{fig:opt-example1} shows the iterations made over the graph to get the post dominator of each node with optimization. 
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[width=1\linewidth]{tex-figures/optimization.pdf}
+	\caption{Iterations needed to compute post dominator without optimization.}
+	\label{fig:opt-example}
+\end{figure}
+\begin{figure}
+	\centering
+	\includegraphics[width=0.5\linewidth]{tex-figures/optimization2.pdf}
+		\caption{Iterations needed to compute post dominator with optimization.}
+	\label{fig:opt-example1}
+\end{figure}
 % 
 % 
 % \begin{itemize}

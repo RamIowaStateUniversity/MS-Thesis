@@ -3,9 +3,9 @@
 
 The availability of open source repositories like GitHub is driving
 data-driven solutions to software engineering problems, e.g.
-specification inference~\cite{nguyen2014mining}, discovering programming
-patterns~\cite{thummalapenta2009alattin}, suggesting bug
-fixes~\cite{livshits2005dynamine,cpminer}, etc.
+specification inference by ~\cite{nguyen2014mining}, discovering programming
+patterns by ~\cite{thummalapenta2009alattin}, suggesting bug
+fixes by ~\cite{livshits2005dynamine,cpminer}, etc.
 These software engineering tasks analyze different source code
 representations, such as text, abstract syntax trees (ASTs), control
 flow graphs (CFGs), at massive scale.
@@ -17,37 +17,37 @@ post-order, reverse post-order, etc, no single strategy works best for
 different kinds of analyses and different kinds of graphs.
 Our contribution is {\em hybrid traversal selection}, a
 novel source code analysis optimization technique for source code
-analyses expressed as graph traversals.
+analyses expressed as graph traversals. This work was done collaboratively with Dr. Hridesh Rajan, Dr.Hoan A Nguyen and Ganesha Upadhaya. Consequently, Chapters 1, 2, 4 and 6 - 14 in this thesis are based on that collaborative work.
 
-\begin{figure}[t]
+\begin{figure*}[t]%
 \centering
 \subfloat[Reaching definition analysis.] {
-\includegraphics[width=.32\linewidth]{figures/motivation-a-rd}
+\includegraphics[width=.5\linewidth]{figures/motivation-a-rd}
 }
 \subfloat[Post-dominator analysis.] {
-\includegraphics[width=.32\linewidth]{figures/motivation-a-pdom}
-}
+\includegraphics[width=.5\linewidth]{figures/motivation-a-pdom}
+}\\
 \subfloat[Collector analysis.] {
-\includegraphics[width=.32\linewidth]{figures/motivation-a-col}
+\includegraphics[width=.5\linewidth]{figures/motivation-a-col}
 }
 \caption{Running times (ms) of the three analyses on graph A using different traversal strategies.}
 \label{fig:example-a-graph}
-\end{figure}
+\end{figure*}
 
 {\bf Motivation and Key Observations.\ }
 To motivate, consider a software engineering task that infers the temporal 
 specifications between pairs of API method calls, i.e., a call to $a$ must be 
-followed by a call to $b$~\cite{engler-sosp2001,ramanathan-icse2007,weimer-tacas2005,yang-icse2006}. 
+followed by a call to $b$ by ~\cite{engler-sosp2001,ramanathan-icse2007,weimer-tacas2005,yang-icse2006}. 
 A data-driven approach for inference is to look for pairs of API calls that frequently go in pairs in 
 the same order at API call sites in the client methods' code. Such an 
 approach contains (at least) three source code analyses on the control flow graph 
 (CFG) of each client method: 
 %
 1) identifying references of the API classes and call sites of the API 
-methods which can be done using \emph{reaching definition} analysis~\cite{programanalysis}; 
+methods which can be done using \emph{reaching definition} analysis(~\cite{programanalysis}); 
 %
 2) identifying the pairs of API calls ($a$, $b$) where $b$ follows $a$ in the 
-client code which can be done using \emph{post-dominator} analysis~\cite{compilers}; and 
+client code which can be done using \emph{post-dominator} analysis(~\cite{compilers}); and 
 %
 3) collecting pairs of temporal API calls by traversing all nodes in the 
 CFG--let us call this \emph{collector} analysis. 
@@ -60,11 +60,18 @@ of each client method. The traversal strategy could be chosen from a
 set of standard strategies e.g depth-first search (DFS), post-order 
 (PO), reverse post-order (RPO), worklist with post-ordering (WPO), 
 worklist with reverse post-ordering (WRPO) and any order (ANY).
+In ANY order traversal strategy, nodes can
+be visited in any order. In post-order traversal, the successors of
+any node are visited before visiting the node, while in reverse post-order traversal, the
+predecessors of any node are visited before visiting the node. In Worklist with Post-Order and Worklist with reverse post-order, the nodes are visited in the order they appear in the worklist. A worklist is a
+data structure used to keep track of nodes to be visited. In WPO, worklist is
+initialized with post-ordering of nodes, while in WRPO, The
+worklist is initialized with nodes in the reverse post-order.
 
 Figure \ref{fig:example-a-graph} shows the performance of each of these three 
 analyses when using standard traversal strategies.
 These runs are analyzing the CFG of a method in the DaCapo 
-benchmark~\cite{blackburn2006dacapo}. 
+benchmark(~\cite{blackburn2006dacapo}). 
 Actual implementation of this method is not important, but it suffices
 to know that the CFG, which we shall refer to as Graph A, has 50 nodes
 and has branches but no loops. Figure \ref{fig:example-a-graph} shows
@@ -122,7 +129,7 @@ significant.
 To illustrate, consider \figref{fig:motive} that shows the performance of 
 our entire illustrative example (inferring temporal specifications) on a 
 large corpus of 287,000 CFGs extracted from the DaCapo
-benchmark dataset~\cite{blackburn2006dacapo}.
+benchmark dataset(~\cite{blackburn2006dacapo}).
 \figref{fig:motive} shows the 
 bar chart for the total running times of the three analyses. The \textbf{Best}
  strategy is an ideal one where we can always choose the most efficient with 
@@ -150,22 +157,4 @@ were considerably reduced by 1\%-28\% (13 minutes to 72 minutes in absolute time
 The overhead imposed by our approach is negligible (less than 0.2\% of the total 
 running time for a large dataset and less than 0.01\% for an ultra-large dataset). 
 
-In summary, this paper makes the following contributions:
-\begin{itemize}
-  \item It describes a system for expressing source code analysis as traversals. The
-  constructs and operations in the system allows different source code analysis to
-  be expressed in a manner that allows automatic selection of the best traversal
-  strategies.
-  \item It defines a set of novel properties about the traversal expressed 
-  in our system. It also describes algorithms for analysing traversals for inferring 
-  these properties. 
-  \item It describes a novel decision tree for selecting the most suitable traversal 
-  strategy. The static and runtime properties also allows
-  certain optimizations to be performed on the selected traversal strategy to
-  further improve the performance.
-  \item It demonstrates the potentially broad range of applications of
-  hybrid traversal selection for optimizing source code analysis such
-  as available expressions, local may alias, live variable, nullness
-  analysis, post dominator, reaching definitions, resource status,
-  very busy expression, etc.
-\end{itemize}
+The rest of the thesis is organized as follows. Chapter 2 lists the contribution of our work. Chapter 3 gives a background of many ideas that this thesis builds upon, such as Graph and its traversal, various traversal strategies, Program analysis, Control and data flow analysis. Chapter 4.1 describes our system For expressing source code analysis as traversals, while Chapter 4.2 presents the factors that influence the selection of the optimal traversal strategy for any given traversal. Chapter 4.3 lists all the candidate traversal strategies while Chapter 4.4 describes our decision tree to select traversal strategy and also presents an example analysis and graph and walks through the decision tree. Chapter 5 gives the implementation detail on how we extended Boa language to have hybrid capability. Chapter 6 presents our experimental setup and the dataset used. Chapter 7 provides the evaluation and the anlaysis that we did on running time comparison between hybrid and various other strategies. Chapter 8 presents the correctness of analysis using Hybrid approach. Chapter 9 presents the Hybrid's traversal strategy prediction precision. Chapter 10 analyses our decision tree's distribution while Chapter 11 analyses the importance of our traversal optimization. Chapter 12 discusses the two case studies that we implemented using our formalism for source code analysis and their results. Chapter 13 discusses about the threat to validity while Chapter 14 discusses related work. Chapter 15 concludes and gives some possible ideas for future work.

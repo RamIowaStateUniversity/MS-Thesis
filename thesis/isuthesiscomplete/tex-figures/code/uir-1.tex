@@ -1,0 +1,34 @@
+\begin{figure}[ht!]
+% \centering
+\begin{lstlisting}[numbers=left, tabsize=4, escapechar=@, caption={Useless increment in return statement},label={lst:uir-code}, lastline = 59] 
+m: output collection[string][string][int] of int;
+p: Project = input;
+
+cfg: CFG;
+invalid : set of int;
+
+init := traversal(node: CFGNode){
+	if(def(node.stmt)) {
+		if(node.stmt.kind == StatementKind.RETURN) {
+			if(def(node.stmt.expression)) {
+				if(node.stmt.expression.kind == ExpressionKind.OP_INC) {
+					add(invalid, int(node.id));
+				}
+			}
+		}
+	}
+};
+
+q_all := visitor {
+	before node: Method -> {
+		cfg = getcfg(node);
+		clear(invalid);
+		
+		traverse(cfg, TraversalDirection.FORWARD, TraversalKind.HYBRID, init);
+			
+	}
+};
+
+visit(p, q_all);
+\end{lstlisting}
+\end{figure}
